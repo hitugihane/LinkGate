@@ -1,0 +1,69 @@
+{
+  // 日本語表示
+  "locale": "ja",
+
+  // Go の設定
+  "go.useLanguageServer": true,
+  "go.formatTool": "goimports",
+  "go.lintTool": "golint",
+  "go.lintOnSave": "package",
+  "go.vetOnSave": "package",
+  "go.testOnSave": true,
+  "go.toolsManagement.autoUpdate": true,
+
+  // 保存設定
+  "editor.formatOnSave": true,
+  "[go]": {
+    "editor.defaultFormatter": "golang.Go"
+  },
+
+  // GitLens 設定
+  "gitlens.codeLens.enabled": true,
+
+  // Error Lens 設定
+  "errorLens.gutterIconsEnabled": true,
+  "errorLens.gutterIconSet": "emoji",
+  "errorLens.gutterEmoji": {
+    "error": "🔥",
+    "warning": "🌟",
+    "info": "📘",
+    "hint": "🍏"
+  },
+
+  // TODO Tree 設定
+  "todo-tree.highlights.defaultHighlight": {
+    "gutterIcon": true
+  },
+  "todo-tree.highlights.customHighlight": {
+    "BUG": {
+      "icon": "bug",
+      "foreground": "#000000",
+      "iconColour": "#00fffb",
+      "background": "#00fffb"
+    },
+    "FIXME": {
+      "icon": "tools",
+      "foreground": "#ffffff",
+      "iconColour": "#ff00aa",
+      "background": "#ff00aa"
+    },
+    "TODO": {
+      "icon": "issue-closed",
+      "foreground": "#000000",
+      "iconColour": "#ffbc00",
+      "background": "#ffbc00"
+    },
+    "MEMO": {
+      "icon": "paintbrush",
+      "foreground": "#ffffff",
+      "iconColour": "#fc5115",
+      "background": "#fc5115"
+    }
+  },
+  "todo-tree.general.tags": ["BUG", "FIXME", "TODO", "MEMO"],
+
+  // Spell Checker 設定（英語だけに限定）
+  "cSpell.language": "en",
+  "cSpell.enabled": true,
+  "cSpell.ignoreWords": ["func", "var", "GoLang"]
+}

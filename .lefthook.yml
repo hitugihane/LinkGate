@@ -1,0 +1,17 @@
+pre-commit:
+  commands:
+    format:
+      run: go fmt ./...
+    imports:
+      run: goimports -w .
+    lint:
+      run: golangci-lint run
+    vet:
+      run: go vet ./...
+
+pre-push:
+  commands:
+    test:
+      run: go test -v ./...
+    build:
+      run: go build -v ./...
