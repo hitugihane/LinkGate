@@ -32,15 +32,43 @@
 ```bash
 git clone https://github.com/fugafuga-2025/LinkGate.git
 ```
+
 ```bash
 cd LinkGate
 ```
 
 ### 2. 開発環境の立ち上げ
-1. Docker Desktopを立ち上げる
 
+1. Docker Desktop を立ち上げる
 
 2. 右下に表示される`コンテナーで再度開く`を押すか、
-VS Code 上でコマンドパレットを開き、`Dev Containers: Reopen in Container` を選択
+   VS Code 上でコマンドパレットを開き、`Dev Containers: Reopen in Container` を選択
 
 初回起動時は Docker イメージのビルドや拡張機能のインストールに数分かかります。
+
+---
+
+## 📝 Taskfile の使用方法
+
+本プロジェクトでは、タスクランナーとして [Task](https://taskfile.dev/) を使用しています。
+
+### 利用可能なタスク一覧を表示
+
+```bash
+task
+```
+
+### 主要なタスク
+
+#### 開発関連
+
+- `task dev` - ホットリロード付きで開発サーバーを起動
+- `task run -- ファイル` - アプリケーションを実行
+- `task build -- ファイル` - アプリケーションをビルド
+
+#### コード品質
+
+- `task fmt` - コードをフォーマット
+- `task lint` - リンターを実行
+- `task test` - テストを実行
+- `task check` - 全てのコード品質チェックを実行

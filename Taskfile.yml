@@ -1,0 +1,187 @@
+version: "3"
+
+vars:
+  BINARY_NAME: linkgate
+  BUILD_DIR: ./tmp
+  MAIN_FILE: ./main.go
+  MODULE_NAME: fuagfuga-2025-LinkGate
+
+env:
+  GO111MODULE: on
+  CGO_ENABLED: 0
+
+tasks:
+  default:
+    desc: デフォルトタスク - 利用可能なタスク一覧を表示
+    cmds:
+      - task --list
+
+  # 開発関連タスク
+  dev:
+    desc: ホットリロード付きで開発サーバーを起動
+    cmds:
+      - air
+    deps: [build]
+
+  run:
+    desc: アプリケーションを実行
+    cmds:
+      - go run {{.MAIN_FILE}}
+    deps: [build]
+
+  # ビルド関連タスク
+  build:
+    desc: アプリケーションをビルド
+    cmds:
+      - mkdir -p {{.BUILD_DIR}}
+      - go build -o {{.BUILD_DIR}}/{{.BINARY_NAME}} {{.MAIN_FILE}}
+    sources:
+      - "**/*.go"
+      - go.mod
+      - go.sum
+    generates:
+      - "{{.BUILD_DIR}}/{{.BINARY_NAME}}"
+
+  build-linux:
+    desc: Linux用にクロスコンパイル
+    cmds:
+      - mkdir -p {{.BUILD_DIR}}
+      - GOOS=linux GOARCH=amd64 go build -o {{.BUILD_DIR}}/{{.BINARY_NAME}}-linux {{.MAIN_FILE}}
+    env:
+      GOOS: linux
+      GOARCH: amd64
+
+  # 依存関係管理
+  deps:
+    desc: 依存関係をダウンロード
+    cmds:
+      - go mod download
+      - go mod verify
+
+  deps-update:
+    desc: 依存関係を更新
+    cmds:
+      - go get -u ./...
+      - go mod tidy
+
+  deps-clean:
+    desc: 依存関係をクリーンアップ
+    cmds:
+      - go mod tidy
+
+  # テスト関連
+  test:
+    desc: テストを実行
+    cmds:
+      - go test -v ./...
+
+  test-coverage:
+    desc: カバレッジ付きでテストを実行
+    cmds:
+      - go test -v -coverprofile=coverage.out ./...
+      - go tool cover -html=coverage.out -o coverage.html
+
+  test-race:
+    desc: レース条件検出付きでテストを実行
+    cmds:
+      - go test -race -v ./...
+
+  # コード品質関連
+  fmt:
+    desc: コードをフォーマット
+    cmds:
+      - go fmt ./...
+
+  imports:
+    desc: importを整理
+    cmds:
+      - goimports -w .
+
+  lint:
+    desc: リンターを実行
+    cmds:
+      - golangci-lint run
+
+  vet:
+    desc: go vetを実行
+    cmds:
+      - go vet ./...
+
+  check:
+    desc: 全てのコード品質チェックを実行
+    deps: [fmt, imports, vet, lint, test]
+
+  # Docker関連
+  docker-build:
+    desc: Dockerイメージをビルド
+    cmds:
+      - docker build -t {{.BINARY_NAME}}:latest .
+
+  docker-up:
+    desc: docker-composeでサービスを起動
+    cmds:
+      - docker-compose up -d
+
+  docker-down:
+    desc: docker-composeでサービスを停止
+    cmds:
+      - docker-compose down
+
+  docker-logs:
+    desc: docker-composeのログを表示
+    cmds:
+      - docker-compose logs -f
+
+  # Swagger/OpenAPI関連
+  swagger:
+    desc: Swaggerドキュメントを生成
+    cmds:
+      - swag init -g {{.MAIN_FILE}} -o ./docs
+
+  # クリーンアップ
+  clean:
+    desc: ビルド成果物をクリーンアップ
+    cmds:
+      - rm -rf {{.BUILD_DIR}}
+      - rm -f coverage.out coverage.html
+      - go clean
+
+  clean-all:
+    desc: 全てのクリーンアップ（モジュールキャッシュ含む）
+    cmds:
+      - task clean
+      - go clean -modcache
+
+  # データベース関連
+  db-up:
+    desc: MongoDBのみを起動
+    cmds:
+      - docker-compose up -d mongodb
+
+  db-down:
+    desc: MongoDBを停止
+    cmds:
+      - docker-compose stop mongodb
+
+  # 便利なタスク
+  install-tools:
+    desc: 開発に必要なツールをインストール
+    cmds:
+      - go install github.com/swaggo/swag/cmd/swag@latest
+      - go install github.com/evilmartians/lefthook@latest
+      - go install golang.org/x/tools/cmd/goimports@latest
+      - go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+      - go install github.com/air-verse/air@latest
+
+  init:
+    desc: プロジェクトの初期セットアップ
+    cmds:
+      - task install-tools
+      - task deps
+      - echo "プロジェクトのセットアップが完了しました！"
+
+  # ヘルスチェック
+  health:
+    desc: アプリケーションのヘルスチェック
+    cmds:
+      - curl -f http://localhost:8080/health || echo "アプリケーションが起動していません"

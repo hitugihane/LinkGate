@@ -11,7 +11,8 @@ RUN go install github.com/swaggo/swag/cmd/swag@latest \
     && go install github.com/evilmartians/lefthook@latest \
     && go install golang.org/x/tools/cmd/goimports@latest \
     && go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest \
-    && go install github.com/air-verse/air@latest 
+    && go install github.com/air-verse/air@latest \
+    && go install github.com/go-task/task/v3/cmd/task@latest
 
 # 環境変数にgoバイナリを追加（既に設定されているが明示的に追加）
 ENV PATH=$PATH:/go/bin
