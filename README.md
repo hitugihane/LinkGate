@@ -4,7 +4,6 @@
 
 - [Go 1.24](https://go.dev/)
 - [Dev Containers](https://containers.dev/)
-- [Visual Studio Code](https://code.visualstudio.com/)
 - 拡張機能（自動インストール）:
   - Go
   - GitLens
@@ -43,6 +42,7 @@ cd LinkGate
 
 2. 右下に表示される`コンテナーで再度開く`を押すか、
    VS Code 上でコマンドパレットを開き、`Dev Containers: Reopen in Container` を選択
+3. `task dev`を実行
 
 初回起動時は Docker イメージのビルドや拡張機能のインストールに数分かかります。
 
@@ -72,3 +72,14 @@ task
 - `task lint` - リンターを実行
 - `task test` - テストを実行
 - `task check` - 全てのコード品質チェックを実行
+
+## 💬 使えるコメントの説明
+
+本プロジェクトでは、`TODO Tree` 拡張機能を利用して、コード内のコメントを一覧表示できます。以下のようなコメントをコード中に記述することで、タスクや注意事項を簡単に管理できます。
+
+- `// TODO: やるべきこと`
+- `// FIXME: 修正が必要な箇所`
+- `// NOTE: 補足情報や注意点`
+- `// BUG: バグの報告`
+
+これらのキーワードを含むコメントは、ファイル内でハイライト、自動的に検出され、一覧表示されます。
