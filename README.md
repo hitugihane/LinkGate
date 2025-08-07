@@ -42,7 +42,8 @@ cd LinkGate
 
 2. 右下に表示される`コンテナーで再度開く`を押すか、
    VS Code 上でコマンドパレットを開き、`Dev Containers: Reopen in Container` を選択
-3. `task dev`を実行
+3. `cp -n .env.example .env`で環境変数ファイルをコピー
+4. `task dev`を実行
 
 初回起動時は Docker イメージのビルドや拡張機能のインストールに数分かかります。
 
