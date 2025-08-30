@@ -1,20 +1,25 @@
 package discord
 
-// このパッケージは Discord ボットへのメッセージ送信を担当します。
+// このパッケージは Discord ボットへのメッセージ送信と受信を担当します。
 // LINE ボットと同様に、MongoDB に登録された新規メッセージを
-// Discord のチャンネルへ転送する用途を想定しています。
+// Discord のチャンネルへ転送し、Discord からのメッセージを監視してDBに保存します。
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
 	"log"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"fuagfuga-2025-LinkGate/src/model"
+	"github.com/bwmarrin/discordgo"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 // Discord API への認証に使用する Bot トークン。
@@ -24,6 +29,11 @@ var botToken = os.Getenv("DISCORD_BOT_TOKEN")
 // メッセージ送信先となる Discord チャンネル ID。
 // 環境変数 DISCORD_CHANNEL_ID に設定してください。
 var channelID = os.Getenv("DISCORD_CHANNEL_ID")
+
+// Discord セッション
+var session *discordgo.Session
+
+var mongoCollection *mongo.Collection
 
 // CreateDiscordMessage はMongoDBに新規追加されたメッセージをDiscordへ転送します。
 func CreateDiscordMessage(msg model.Message) {
@@ -92,4 +102,96 @@ func CreateDiscordMessage(msg model.Message) {
 		return
 	}
 	log.Println("Discord送信成功 (Embed形式)")
+}
+
+func StartDiscordBot(collection *mongo.Collection) error {
+	if botToken == "" {
+		log.Println("DiscordのBotトークンが設定されていません")
+		return fmt.Errorf("DISCORD_BOT_TOKEN is not set")
+	}
+	if channelID == "" {
+		log.Println("DiscordのチャンネルIDが設定されていません")
+		return fmt.Errorf("DISCORD_CHANNEL_ID is not set")
+	}
+
+	mongoCollection = collection
+
+	var err error
+	session, err = discordgo.New("Bot " + botToken)
+	if err != nil {
+		log.Printf("Discordセッションの作成に失敗しました: %v", err)
+		return err
+	}
+
+	session.AddHandler(messageCreate)
+
+	session.Identify.Intents = discordgo.IntentsGuildMessages
+
+	err = session.Open()
+	if err != nil {
+		log.Printf("Discordセッションのオープンに失敗しました: %v", err)
+		return err
+	}
+
+	log.Println("🔍 Discord bot started and monitoring messages...")
+	return nil
+}
+
+func CloseDiscordBot() {
+	if session != nil {
+		session.Close()
+	}
+}
+
+func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
+	if m.Author.ID == s.State.User.ID {
+		return
+	}
+
+	if m.ChannelID != channelID {
+		return
+	}
+
+	if m.Type != discordgo.MessageTypeDefault {
+		return
+	}
+
+	SaveDiscordMessageToMongoDB(s, m)
+}
+
+func SaveDiscordMessageToMongoDB(s *discordgo.Session, m *discordgo.MessageCreate) {
+	if mongoCollection == nil {
+		log.Println("MongoDB collection is not initialized")
+		return
+	}
+
+	userName := m.Author.Username
+	if m.Member != nil && m.Member.Nick != "" {
+		userName = m.Member.Nick
+	}
+
+	iconURL := m.Author.AvatarURL("64")
+
+	var message model.Message
+
+	// Message構造体に保存内容を格納
+	message.ID = primitive.NewObjectID()
+	message.User.ID = primitive.NewObjectID()
+	message.User.UserID = m.Author.ID
+	message.User.Platform = model.PlatformDiscord
+	message.User.Name = userName
+	message.User.IconUrl = iconURL
+	message.Content.ID = primitive.NewObjectID()
+	message.Content.Text = strings.TrimSpace(m.Content)
+	message.CreatedAt = time.Now()
+
+	// MongoDB にドキュメントを挿入
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	if _, err := mongoCollection.InsertOne(ctx, message); err != nil {
+		log.Printf("Discordメッセージのデータ登録に失敗しました: %v", err)
+		return
+	}
+
+	log.Printf("Discord message saved: %s from %s", message.Content.Text, userName)
 }

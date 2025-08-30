@@ -3,6 +3,7 @@ module fuagfuga-2025-LinkGate
 go 1.24.5
 
 require (
+	github.com/bwmarrin/discordgo v0.28.1
 	github.com/gin-gonic/gin v1.10.1
 	go.mongodb.org/mongo-driver v1.17.4
 )
