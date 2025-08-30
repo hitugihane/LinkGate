@@ -6,9 +6,6 @@ import (
 	"fuagfuga-2025-LinkGate/src/usecase"
 	"fuagfuga-2025-LinkGate/src/usecase/discord"
 	"log"
-	"os"
-	"os/signal"
-	"syscall"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -48,24 +45,10 @@ func main() {
 
 	go usecase.WatchChanges(collection)
 
-	if err := discord.StartDiscordBot(collection); err != nil {
-		log.Printf("Discord ボットの起動に失敗しました: %v", err)
-	} else {
-		defer discord.CloseDiscordBot()
+	go discord.InitializeDiscordBot(collection)
+
+	// サーバーを起動
+	if err := r.Run(":8080"); err != nil {
+		log.Fatal("サーバーの起動に失敗🥺:", err)
 	}
-
-	stop := make(chan os.Signal, 1)
-	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
-
-	go func() {
-		if err := r.Run(":8080"); err != nil {
-			log.Fatal("サーバーの起動に失敗🥺:", err)
-		}
-	}()
-
-	log.Println("🚀 LinkGate API server started on :8080")
-	log.Println("Press Ctrl+C to stop...")
-
-	<-stop
-	log.Println("🛑 Shutting down gracefully...")
 }

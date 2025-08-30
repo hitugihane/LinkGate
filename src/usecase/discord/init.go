@@ -13,7 +13,9 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"os/signal"
 	"strings"
+	"syscall"
 	"time"
 
 	"fuagfuga-2025-LinkGate/src/model"
@@ -194,4 +196,20 @@ func SaveDiscordMessageToMongoDB(s *discordgo.Session, m *discordgo.MessageCreat
 	}
 
 	log.Printf("Discord message saved: %s from %s", message.Content.Text, userName)
+}
+
+func InitializeDiscordBot(collection *mongo.Collection) {
+	if err := StartDiscordBot(collection); err != nil {
+		log.Printf("Discord ボットの起動に失敗しました: %v", err)
+		return
+	}
+
+	log.Println("🔍 Discord bot initialized successfully")
+	
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
+	
+	<-stop
+	log.Println("🛑 Discord bot shutting down gracefully...")
+	CloseDiscordBot()
 }
